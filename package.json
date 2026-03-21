@@ -3,16 +3,21 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "cytoscape": "^3.33.1"
+    "cytoscape": "3.33.1"
   },
   "devDependencies": {
-    "typescript": "^5.8.0",
+    "@types/node": "^25.5.0",
+    "typescript": "5.9.3",
     "vite": "^7.0.0"
   }
 }
