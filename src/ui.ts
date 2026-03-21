@@ -1,8 +1,17 @@
 import cytoscape from "cytoscape";
 import type { AppStore } from "./store";
 import { totalGross } from "./solver";
+import {
+  triangleScenario,
+  nestedScenario,
+  liquidityScenario,
+} from "./scenario";
+
+type ScenarioName = "triangle" | "nested" | "liquidity";
 
 export function mountUI(root: HTMLElement, store: AppStore): void {
+  let activeScenario: ScenarioName = "triangle";
+
   root.innerHTML = `
     <div class="app-shell">
       <header class="header">
@@ -11,8 +20,14 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
       </header>
 
       <section class="toolbar">
+        <button id="scenario-triangle">Triangle</button>
+        <button id="scenario-nested">Nested</button>
+        <button id="scenario-liquidity">Liquidity</button>
         <button id="solve-one">Resolve one cycle</button>
         <button id="solve-all">Resolve all cycles</button>
+        <button id="export-json">Export JSON</button>
+        <label for="import-json" class="import-label">Import JSON</label>
+        <input id="import-json" type="file" accept="application/json" style="display:none" />
       </section>
 
       <section class="layout">
@@ -28,12 +43,37 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
   const graphEl = root.querySelector<HTMLElement>("#graph");
   const metricsEl = root.querySelector<HTMLElement>("#metrics");
   const batchesEl = root.querySelector<HTMLElement>("#batches");
+
+  const triangleBtn = root.querySelector<HTMLButtonElement>("#scenario-triangle");
+  const nestedBtn = root.querySelector<HTMLButtonElement>("#scenario-nested");
+  const liquidityBtn = root.querySelector<HTMLButtonElement>("#scenario-liquidity");
+
   const solveOneBtn = root.querySelector<HTMLButtonElement>("#solve-one");
   const solveAllBtn = root.querySelector<HTMLButtonElement>("#solve-all");
 
-  if (!graphEl || !metricsEl || !batchesEl || !solveOneBtn || !solveAllBtn) {
+  const exportBtn = root.querySelector<HTMLButtonElement>("#export-json");
+  const importInput = root.querySelector<HTMLInputElement>("#import-json");
+
+  if (
+    !graphEl ||
+    !metricsEl ||
+    !batchesEl ||
+    !triangleBtn ||
+    !nestedBtn ||
+    !liquidityBtn ||
+    !solveOneBtn ||
+    !solveAllBtn ||
+    !exportBtn ||
+    !importInput
+  ) {
     throw new Error("UI mount failed: missing elements");
   }
+
+  const scenarioButtons: Record<ScenarioName, HTMLButtonElement> = {
+    triangle: triangleBtn,
+    nested: nestedBtn,
+    liquidity: liquidityBtn,
+  };
 
   const cy = cytoscape({
     container: graphEl,
@@ -68,25 +108,43 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
     layout: { name: "cose" },
   });
 
+  function renderScenarioButtons(): void {
+    (Object.keys(scenarioButtons) as ScenarioName[]).forEach((name) => {
+      const btn = scenarioButtons[name];
+      btn.style.fontWeight = name === activeScenario ? "700" : "400";
+      btn.style.outline = name === activeScenario ? "2px solid #333" : "";
+      btn.style.outlineOffset = name === activeScenario ? "2px" : "";
+    });
+  }
+
   function render(): void {
     const state = store.getState();
     const selected = new Set(state.selectedCycleObligationIds);
+    const lastBatch = state.batches[state.batches.length - 1];
+    const lastCleared = lastBatch ? lastBatch.beforeGross - lastBatch.afterGross : 0;
 
     metricsEl.innerHTML = `
       <div><strong>Total gross:</strong> ${totalGross(state.obligations)}</div>
       <div><strong>Active obligations:</strong> ${state.obligations.length}</div>
       <div><strong>Batches:</strong> ${state.batches.length}</div>
+      <div><strong>Last cleared:</strong> ${lastCleared}</div>
+      <div><strong>Scenario:</strong> ${activeScenario}</div>
     `;
 
-    batchesEl.innerHTML = state.batches.length === 0
-      ? `<p>No settlement batches yet.</p>`
-      : state.batches.map((batch) => `
+    batchesEl.innerHTML =
+      state.batches.length === 0
+        ? `<p>No settlement batches yet.</p>`
+        : state.batches
+            .map(
+              (batch) => `
           <div class="batch-item">
             <div><strong>${batch.strategy}</strong></div>
             <div>records: ${batch.records.length}</div>
             <div>cleared: ${batch.beforeGross - batch.afterGross}</div>
           </div>
-        `).join("");
+        `
+            )
+            .join("");
 
     cy.elements().remove();
     cy.add([
@@ -102,10 +160,81 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
       })),
     ]);
     cy.layout({ name: "cose", animate: false }).run();
+
+    renderScenarioButtons();
   }
+
+  triangleBtn.addEventListener("click", () => {
+    activeScenario = "triangle";
+    store.actions.setObligations(triangleScenario());
+  });
+
+  nestedBtn.addEventListener("click", () => {
+    activeScenario = "nested";
+    store.actions.setObligations(nestedScenario());
+  });
+
+  liquidityBtn.addEventListener("click", () => {
+    activeScenario = "liquidity";
+    store.actions.setObligations(liquidityScenario());
+  });
 
   solveOneBtn.addEventListener("click", () => store.actions.solveOneCycle());
   solveAllBtn.addEventListener("click", () => store.actions.solveAllCycles());
+
+  exportBtn.addEventListener("click", () => {
+    const state = store.getState();
+    const payload = {
+      nodes: state.nodes,
+      obligations: state.obligations,
+      batches: state.batches,
+    };
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "cycles-graph.json";
+    link.click();
+    URL.revokeObjectURL(url);
+  });
+
+  importInput.addEventListener("change", async (event) => {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text) as {
+        obligations?: Array<{
+          id: string;
+          from: string;
+          to: string;
+          amount: number;
+          unit: string;
+          createdAt: string;
+          reason?: string;
+          dueAt?: string;
+          kind: "obligation";
+        }>;
+      };
+
+      if (!parsed.obligations || !Array.isArray(parsed.obligations)) {
+        throw new Error("JSON must contain obligations array");
+      }
+
+      activeScenario = "triangle";
+      store.actions.setObligations(parsed.obligations);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to import JSON");
+    } finally {
+      importInput.value = "";
+    }
+  });
 
   store.subscribe(render);
   render();

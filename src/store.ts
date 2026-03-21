@@ -22,6 +22,10 @@ export function createAppStore(initialObligations: Obligation[]) {
   }
 
   const actions = {
+    setObligations(obligations: Obligation[]): void {
+      setState(createInitialState(obligations));
+    },
+
     solveOneCycle(): void {
       const result = solveOneCycleMinEdge(state.obligations);
       setState({
@@ -31,6 +35,7 @@ export function createAppStore(initialObligations: Obligation[]) {
         selectedCycleObligationIds: result.cycle ? result.cycle.map((edge) => edge.id) : [],
       });
     },
+
     solveAllCycles(): void {
       const result = resolveAllCycles(state.obligations);
       setState({
