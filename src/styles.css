@@ -1,0 +1,68 @@
+:root {
+  font-family: Inter, system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #f7f7fb;
+}
+
+.app-shell {
+  padding: 16px;
+}
+
+.header h1 {
+  margin: 0 0 6px;
+}
+
+.header p {
+  margin: 0 0 16px;
+  color: #555;
+}
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+button {
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 16px;
+}
+
+.left-col {
+  display: grid;
+  gap: 16px;
+}
+
+.panel,
+.graph-panel {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.graph-panel {
+  min-height: 600px;
+  padding: 0;
+}
+
+.side-panel {
+  overflow: auto;
+}
+
+.batch-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
