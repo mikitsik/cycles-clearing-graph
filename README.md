@@ -103,6 +103,6 @@ Built during Shape Rotator Hackathon
 
 ##  Disclaimer
 
-This is a research-inspired prototype, not a financial system
+Hackathon project. This demo shows why naive cycle-by-cycle clearing is insufficient and motivates global optimization approaches
 
-Hackathon project – work in progress
+
