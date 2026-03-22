@@ -36,7 +36,13 @@ export function createAppStore(initialObligations: Obligation[]) {
 
     setObligations(obligations: Obligation[]): void {
       try {
-        setState(createInitialState(obligations));
+        const next = createInitialState(obligations);
+
+        setState({
+          ...next,
+          beforeSnapshot: next.obligations.map((o) => ({ ...o })),
+          afterSnapshot: null,
+        });
       } catch (error) {
         updateState((current) => ({
           ...current,

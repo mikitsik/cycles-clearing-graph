@@ -208,33 +208,33 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
   }
 
   function render(): void {
-    const state = store.getState();
-    const selected = new Set(state.selectedCycleObligationIds);
-    const lastBatch = state.batches[state.batches.length - 1];
-    const lastCleared = lastBatch ? lastBatch.beforeGross - lastBatch.afterGross : 0;
+  const state = store.getState();
+  const selected = new Set(state.selectedCycleObligationIds);
+  const lastBatch = state.batches[state.batches.length - 1];
+  const lastCleared = lastBatch ? lastBatch.beforeGross - lastBatch.afterGross : 0;
 
-    metricsEl.innerHTML = `
-      <div><strong>Total gross:</strong> ${totalGross(state.obligations)}</div>
-      <div><strong>Active obligations:</strong> ${state.obligations.length}</div>
-      <div><strong>Batches:</strong> ${state.batches.length}</div>
-      <div><strong>Last cleared:</strong> ${lastCleared}</div>
-      <div><strong>Scenario:</strong> ${escapeHtml(activeScenario)}</div>
-    `;
+  metricsEl.innerHTML = `
+    <div class="metrics-grid">
+      <div class="metric-card"><strong>Total gross:</strong> ${totalGross(state.obligations)}</div>
+      <div class="metric-card"><strong>Active obligations:</strong> ${state.obligations.length}</div>
+      <div class="metric-card"><strong>Batches:</strong> ${state.batches.length}</div>
+      <div class="metric-card"><strong>Last cleared:</strong> ${lastCleared}</div>
+      <div class="metric-card"><strong>Scenario:</strong> ${activeScenario}</div>
+    </div>
+  `;
 
-    errorEl.innerHTML = state.lastError
-      ? `<div><strong>Error:</strong> ${escapeHtml(state.lastError)}</div>`
-      : `<div><strong>Status:</strong> OK</div>`;
+  errorEl.innerHTML = `<strong>Status:</strong> ${escapeHtml(state.lastError ?? "OK")}`;
 
-    if (state.beforeSnapshot && state.afterSnapshot) {
-      const beforeGross = totalGross(state.beforeSnapshot);
-      const afterGross = totalGross(state.afterSnapshot);
-      const cleared = beforeGross - afterGross;
-      const { beforeHtml, afterHtml } = formatBeforeAfterLists(
-        state.beforeSnapshot,
-        state.afterSnapshot,
-      );
+  if (state.beforeSnapshot && state.afterSnapshot) {
+    const beforeGross = totalGross(state.beforeSnapshot);
+    const afterGross = totalGross(state.afterSnapshot);
+    const cleared = beforeGross - afterGross;
+    const { beforeHtml, afterHtml } = formatBeforeAfterLists(
+      state.beforeSnapshot,
+      state.afterSnapshot,
+    );
 
-      comparisonEl.innerHTML = `
+    comparisonEl.innerHTML = `
       <div class="comparison-header">
         <strong>Before / After</strong>
         <div class="comparison-stats">
@@ -265,47 +265,85 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
         </div>
       </div>
     `;
-    } else {
-      comparisonEl.innerHTML = `
-        <div><strong>Before / After</strong></div>
-        <div style="margin-top: 8px;">No settlement comparison yet.</div>
-      `;
-    }
+  } else if (state.beforeSnapshot) {
+    const beforeGross = totalGross(state.beforeSnapshot);
+    const beforeCount = state.beforeSnapshot.length;
+    const beforeHtml = state.beforeSnapshot
+      .map(
+        (o) =>
+          `${escapeHtml(o.from)} → ${escapeHtml(o.to)}: ${o.amount} ${escapeHtml(o.unit)}`
+      )
+      .join("<br>");
 
-    batchesEl.innerHTML =
-      state.batches.length === 0
-        ? `<p>No settlement batches yet.</p>`
-        : state.batches
-            .map(
-              (batch, index) => `
-                <div class="batch-item">
-                  <div><strong>#${index + 1} — ${escapeHtml(batch.strategy)}</strong></div>
-                  <div>records: ${batch.records.length}</div>
-                  <div>cleared: ${batch.beforeGross - batch.afterGross}</div>
-                </div>
-              `
-            )
-            .join("");
+    comparisonEl.innerHTML = `
+      <div class="comparison-header">
+        <strong>Before</strong>
+        <div class="comparison-stats">
+          <span>Total gross: <b>${beforeGross}</b></span>
+          <span>Active obligations: ${beforeCount}</span>
+        </div>
+      </div>
 
-    cy.elements().remove();
-    cy.add([
-      ...state.nodes.map((node) => ({
-        data: { id: node.id, label: node.label },
-      })),
-      ...state.obligations.map((obligation) => ({
-        data: {
-          id: obligation.id,
-          source: obligation.from,
-          target: obligation.to,
-          label: `${obligation.amount} ${obligation.unit}`,
-        },
-        classes: selected.has(obligation.id) ? "cycle-edge" : "",
-      })),
-    ]);
-    cy.layout({ name: "cose", animate: false }).run();
-
-    renderScenarioButtons();
+      <div class="comparison-grid">
+        <div class="comparison-col" style="grid-column: 1 / -1;">
+          <div class="comparison-title">Before</div>
+          <div class="comparison-list">
+            ${beforeHtml}
+          </div>
+        </div>
+      </div>
+    `;
+  } else {
+    comparisonEl.innerHTML = `
+      <div><strong>Before / After</strong></div>
+      <div style="margin-top: 8px;">No graph loaded yet.</div>
+    `;
   }
+
+  batchesEl.innerHTML =
+    state.batches.length === 0
+      ? `<p>No settlement batches yet.</p>`
+      : state.batches
+          .map((batch, index) => {
+            const cleared = batch.beforeGross - batch.afterGross;
+            const recordsHtml = batch.records
+              .map(
+                (record) =>
+                  `<li>${escapeHtml(record.from)} → ${escapeHtml(record.to)}: -${record.delta}</li>`
+              )
+              .join("");
+
+            return `
+              <div class="batch-item">
+                <div><strong>Batch ${index + 1}</strong></div>
+                <div>strategy: ${escapeHtml(batch.strategy)}</div>
+                <div>records: ${batch.records.length}</div>
+                <div>cleared: ${cleared}</div>
+                <ul>${recordsHtml}</ul>
+              </div>
+            `;
+          })
+          .join("");
+
+  cy.elements().remove();
+  cy.add([
+    ...state.nodes.map((node) => ({
+      data: { id: node.id, label: node.label },
+    })),
+    ...state.obligations.map((obligation) => ({
+      data: {
+        id: obligation.id,
+        source: obligation.from,
+        target: obligation.to,
+        label: `${obligation.amount} ${obligation.unit}`,
+      },
+      classes: selected.has(obligation.id) ? "cycle-edge" : "",
+    })),
+  ]);
+  cy.layout({ name: "cose", animate: false }).run();
+
+  renderScenarioButtons();
+}
 
   triangleBtn.addEventListener("click", () => {
     activeScenario = "triangle";
