@@ -26,6 +26,10 @@ export function createAppStore(initialObligations: Obligation[]) {
   }
 
   const actions = {
+    setError(message: string): void {
+      updateState((current) => ({ ...current, lastError: message }));
+    },
+
     clearError(): void {
       updateState((current) => ({ ...current, lastError: null }));
     },

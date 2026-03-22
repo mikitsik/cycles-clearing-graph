@@ -33,6 +33,7 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
       <section class="layout">
         <div class="left-col">
           <div id="metrics" class="panel"></div>
+          <div id="error-box" class="panel"></div>
           <div id="graph" class="graph-panel"></div>
         </div>
         <aside id="batches" class="panel side-panel"></aside>
@@ -53,21 +54,23 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
 
   const exportBtn = root.querySelector<HTMLButtonElement>("#export-json");
   const importInput = root.querySelector<HTMLInputElement>("#import-json");
+  const errorEl = root.querySelector<HTMLElement>("#error-box");
 
   if (
-    !graphEl ||
-    !metricsEl ||
-    !batchesEl ||
-    !triangleBtn ||
-    !nestedBtn ||
-    !liquidityBtn ||
-    !solveOneBtn ||
-    !solveAllBtn ||
-    !exportBtn ||
-    !importInput
-  ) {
-    throw new Error("UI mount failed: missing elements");
-  }
+  !graphEl ||
+  !metricsEl ||
+  !errorEl ||
+  !batchesEl ||
+  !triangleBtn ||
+  !nestedBtn ||
+  !liquidityBtn ||
+  !solveOneBtn ||
+  !solveAllBtn ||
+  !exportBtn ||
+  !importInput
+) {
+  throw new Error("UI mount failed: missing elements");
+}
 
   const scenarioButtons: Record<ScenarioName, HTMLButtonElement> = {
     triangle: triangleBtn,
@@ -130,6 +133,10 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
       <div><strong>Last cleared:</strong> ${lastCleared}</div>
       <div><strong>Scenario:</strong> ${activeScenario}</div>
     `;
+
+    errorEl.innerHTML = state.lastError
+      ? `<div><strong>Error:</strong> ${state.lastError}</div>`
+      : `<div><strong>Status:</strong> OK</div>`;
 
     batchesEl.innerHTML =
       state.batches.length === 0
@@ -216,9 +223,6 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
           amount: number;
           unit: string;
           createdAt: string;
-          reason?: string;
-          dueAt?: string;
-          kind: "obligation";
         }>;
       };
 
@@ -230,7 +234,9 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
       store.actions.setObligations(parsed.obligations);
     } catch (error) {
       console.error(error);
-      alert("Failed to import JSON");
+      store.actions.setError(
+        error instanceof Error ? error.message : "Failed to import JSON"
+      );
     } finally {
       importInput.value = "";
     }
