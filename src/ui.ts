@@ -36,6 +36,7 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
         <div class="left-col">
           <div id="metrics" class="panel"></div>
           <div id="error-box" class="panel"></div>
+          <div id="comparison" class="panel"></div>
           <div id="graph" class="graph-panel"></div>
         </div>
         <aside id="batches" class="panel side-panel"></aside>
@@ -46,6 +47,7 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
   const graphEl = root.querySelector<HTMLElement>("#graph");
   const metricsEl = root.querySelector<HTMLElement>("#metrics");
   const batchesEl = root.querySelector<HTMLElement>("#batches");
+  const comparisonEl = root.querySelector<HTMLElement>("#comparison");
 
   const triangleBtn = root.querySelector<HTMLButtonElement>("#scenario-triangle");
   const nestedBtn = root.querySelector<HTMLButtonElement>("#scenario-nested");
@@ -63,6 +65,7 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
     !graphEl ||
     !metricsEl ||
     !errorEl ||
+    !comparisonEl ||
     !batchesEl ||
     !triangleBtn ||
     !nestedBtn ||

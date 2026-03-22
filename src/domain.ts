@@ -38,6 +38,8 @@ export type AppState = {
   batches: SettlementBatch[];
   selectedCycleObligationIds: string[];
   lastError: string | null;
+  beforeSnapshot: Obligation[] | null;
+  afterSnapshot: Obligation[] | null;
 };
 
 function safeNowIso(): string {
@@ -156,5 +158,7 @@ export function createInitialState(obligations: Obligation[]): AppState {
     batches: [],
     selectedCycleObligationIds: [],
     lastError: null,
+    beforeSnapshot: null,
+    afterSnapshot: null,
   };
 }

@@ -47,6 +47,7 @@ export function createAppStore(initialObligations: Obligation[]) {
 
     solveOneCycle(): void {
       try {
+        const before = state.obligations.map((o) => ({ ...o }));
         const result = solveOneCycleMinEdge(state.obligations);
 
         updateState((current) => ({
@@ -55,6 +56,10 @@ export function createAppStore(initialObligations: Obligation[]) {
           batches: result.batch ? [...current.batches, result.batch] : current.batches,
           selectedCycleObligationIds: [],
           lastError: null,
+          beforeSnapshot: result.batch ? before : current.beforeSnapshot,
+          afterSnapshot: result.batch
+            ? result.updatedObligations.map((o) => ({ ...o }))
+            : current.afterSnapshot,
         }));
       } catch (error) {
         updateState((current) => ({
@@ -66,6 +71,7 @@ export function createAppStore(initialObligations: Obligation[]) {
 
     solveAllCycles(): void {
       try {
+        const before = state.obligations.map((o) => ({ ...o }));
         const result = resolveAllCycles(state.obligations);
 
         updateState((current) => ({
@@ -74,6 +80,11 @@ export function createAppStore(initialObligations: Obligation[]) {
           batches: [...current.batches, ...result.batches],
           selectedCycleObligationIds: [],
           lastError: null,
+          beforeSnapshot: result.batches.length > 0 ? before : current.beforeSnapshot,
+          afterSnapshot:
+            result.batches.length > 0
+              ? result.updatedObligations.map((o) => ({ ...o }))
+              : current.afterSnapshot,
         }));
       } catch (error) {
         updateState((current) => ({
