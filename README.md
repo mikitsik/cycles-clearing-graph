@@ -2,7 +2,7 @@
 
 A local-first application for visualizing and resolving cyclic obligations using graph-based clearing.
 
----
+![Demo](./demo.png)
 
 ##  Idea
 
@@ -15,9 +15,7 @@ The system detects **cycles of debt** and clears them using a minimal edge strat
 
 > If A → B → C → A forms a cycle, the smallest obligation can be netted out across the entire cycle.
 
-This reduces total exposure without external liquidity.
-
----
+This reduces total exposure without external liquidity
 
 ##  Example
 
@@ -35,7 +33,13 @@ B → C: 30
 ✔ 50 units of debt cleared
 ✔ no external money required
 
----
+##  Demo data
+
+You can import example graphs from the `demo-data/` folder:
+
+- `triangle.json` — simple cycle
+- `nested.json` — multiple overlapping cycles
+- `overlapping.json` — competing cycles sharing edges
 
 ##  Features
 
@@ -48,8 +52,6 @@ B → C: 30
 * Import / Export JSON
 * KPI panel (total exposure, cleared amount)
 
----
-
 ##  Architecture
 
 * **Frontend:** TypeScript + Vite
@@ -57,9 +59,7 @@ B → C: 30
 * **State:** local-first store
 * **UI:** Cytoscape.js (graph visualization)
 
-No backend required for MVP.
-
----
+No backend required for MVP
 
 ##  How it works
 
@@ -69,8 +69,6 @@ No backend required for MVP.
 4. Create settlement batch
 5. Apply atomically
 
----
-
 ##  Installation
 
 ```bash
@@ -78,15 +76,11 @@ npm install
 npm run dev
 ```
 
----
-
 ##  Demo scenarios
 
 * Triangle cycle
 * Nested cycles
 * Overlapping cycles
-
----
 
 ##  Inspiration
 
@@ -96,8 +90,6 @@ This project is inspired by:
 * Netting & clearing systems in finance
 * Graph theory (cycle detection)
 
----
-
 ##  Roadmap
 
 * Heuristic global clearing
@@ -105,16 +97,12 @@ This project is inspired by:
 * Multi-user backend (Ruby API)
 * Privacy layer (TEE / ZK)
 
----
-
 ##  Author
 
-Built during Shape Rotator Hackathon.
-
----
+Built during Shape Rotator Hackathon
 
 ##  Disclaimer
 
-This is a research-inspired prototype, not a financial system.
+This is a research-inspired prototype, not a financial system
 
 Hackathon project – work in progress

@@ -1,0 +1,107 @@
+{
+  "nodes": [
+    {
+      "id": "A",
+      "label": "A"
+    },
+    {
+      "id": "B",
+      "label": "B"
+    },
+    {
+      "id": "C",
+      "label": "C"
+    },
+    {
+      "id": "D",
+      "label": "D"
+    },
+    {
+      "id": "E",
+      "label": "E"
+    },
+    {
+      "id": "F",
+      "label": "F"
+    },
+    {
+      "id": "G",
+      "label": "G"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "obl_c81047e8",
+      "from": "A",
+      "to": "B",
+      "amount": 50,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_7fe57cce",
+      "from": "B",
+      "to": "C",
+      "amount": 45,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_8833a82d",
+      "from": "C",
+      "to": "A",
+      "amount": 40,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_4abbf614",
+      "from": "B",
+      "to": "D",
+      "amount": 30,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_731dcf5b",
+      "from": "D",
+      "to": "A",
+      "amount": 25,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_e924b1b4",
+      "from": "C",
+      "to": "E",
+      "amount": 20,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_762996f5",
+      "from": "E",
+      "to": "F",
+      "amount": 18,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_969e1f51",
+      "from": "F",
+      "to": "B",
+      "amount": 15,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_732d5d8a",
+      "from": "F",
+      "to": "G",
+      "amount": 10,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    }
+  ],
+  "batches": []
+}

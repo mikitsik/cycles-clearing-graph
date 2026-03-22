@@ -1,0 +1,99 @@
+{
+  "nodes": [
+    {
+      "id": "A",
+      "label": "A"
+    },
+    {
+      "id": "B",
+      "label": "B"
+    },
+    {
+      "id": "C",
+      "label": "C"
+    },
+    {
+      "id": "D",
+      "label": "D"
+    },
+    {
+      "id": "E",
+      "label": "E"
+    },
+    {
+      "id": "F",
+      "label": "F"
+    },
+    {
+      "id": "G",
+      "label": "G"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "obl_a381751e",
+      "from": "A",
+      "to": "B",
+      "amount": 120,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_bc9b5bfd",
+      "from": "B",
+      "to": "C",
+      "amount": 90,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_b215661f",
+      "from": "C",
+      "to": "A",
+      "amount": 60,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_a261b14d",
+      "from": "C",
+      "to": "D",
+      "amount": 40,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_b90e6275",
+      "from": "D",
+      "to": "E",
+      "amount": 25,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_dddfebbf",
+      "from": "F",
+      "to": "B",
+      "amount": 35,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_26a05e99",
+      "from": "G",
+      "to": "F",
+      "amount": 20,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_c7bb1b61",
+      "from": "E",
+      "to": "G",
+      "amount": 15,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    }
+  ],
+  "batches": []
+}

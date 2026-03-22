@@ -1,0 +1,119 @@
+{
+  "nodes": [
+    {
+      "id": "A",
+      "label": "A"
+    },
+    {
+      "id": "B",
+      "label": "B"
+    },
+    {
+      "id": "C",
+      "label": "C"
+    },
+    {
+      "id": "D",
+      "label": "D"
+    },
+    {
+      "id": "E",
+      "label": "E"
+    },
+    {
+      "id": "F",
+      "label": "F"
+    },
+    {
+      "id": "G",
+      "label": "G"
+    },
+    {
+      "id": "H",
+      "label": "H"
+    }
+  ],
+  "obligations": [
+    {
+      "id": "obl_c0cbb74c",
+      "from": "A",
+      "to": "B",
+      "amount": 110,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_c9988e70",
+      "from": "B",
+      "to": "C",
+      "amount": 95,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_bc2614c7",
+      "from": "C",
+      "to": "A",
+      "amount": 45,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_97a09d2b",
+      "from": "B",
+      "to": "D",
+      "amount": 80,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_79fd1718",
+      "from": "D",
+      "to": "E",
+      "amount": 70,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_e27e352c",
+      "from": "E",
+      "to": "B",
+      "amount": 30,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_b1e3a592",
+      "from": "E",
+      "to": "F",
+      "amount": 28,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_f9aa07c4",
+      "from": "F",
+      "to": "G",
+      "amount": 24,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_30115f2b",
+      "from": "G",
+      "to": "H",
+      "amount": 18,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    },
+    {
+      "id": "obl_cd5a2132",
+      "from": "H",
+      "to": "E",
+      "amount": 12,
+      "unit": "pts",
+      "createdAt": "2026-03-22T09:00:00Z"
+    }
+  ],
+  "batches": []
+}
