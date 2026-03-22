@@ -209,26 +209,36 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
       const cleared = beforeGross - afterGross;
 
       comparisonEl.innerHTML = `
-        <div><strong>Before / After</strong></div>
-        <div style="margin-top: 8px;"><strong>Cleared:</strong> ${cleared}</div>
-        <div><strong>Before gross:</strong> ${beforeGross}</div>
-        <div><strong>After gross:</strong> ${afterGross}</div>
+      <div class="comparison-header">
+        <strong>Before / After</strong>
+        <div class="comparison-stats">
+          <span>Cleared: <b>${cleared}</b></span>
+          <span>Before: ${beforeGross}</span>
+          <span>After: ${afterGross}</span>
+        </div>
+      </div>
 
-        <div style="margin-top: 10px;">
-          <strong>Changed edges</strong><br>
-          ${diffObligations(state.beforeSnapshot, state.afterSnapshot)}
+      <div class="comparison-diff">
+        <strong>Changed edges</strong><br>
+        ${diffObligations(state.beforeSnapshot, state.afterSnapshot)}
+      </div>
+
+      <div class="comparison-grid">
+        <div class="comparison-col">
+          <div class="comparison-title">Before</div>
+          <div class="comparison-list">
+            ${formatObligationList(state.beforeSnapshot)}
+          </div>
         </div>
 
-        <div style="margin-top: 10px;">
-          <strong>Before</strong><br>
-          ${formatObligationList(state.beforeSnapshot)}
+        <div class="comparison-col">
+          <div class="comparison-title">After</div>
+          <div class="comparison-list">
+            ${formatObligationList(state.afterSnapshot)}
+          </div>
         </div>
-
-        <div style="margin-top: 10px;">
-          <strong>After</strong><br>
-          ${formatObligationList(state.afterSnapshot)}
-        </div>
-      `;
+      </div>
+    `;
     } else {
       comparisonEl.innerHTML = `
         <div><strong>Before / After</strong></div>

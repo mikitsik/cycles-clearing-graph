@@ -161,3 +161,60 @@ button:hover {
     min-height: 420px;
   }
 }
+
+/* --- Comparison panel upgrade --- */
+
+.comparison-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.comparison-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.comparison-diff {
+  background: #f9fafb;
+  border: 1px solid #eef0f3;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.comparison-col {
+  background: #ffffff;
+  border: 1px solid #eef0f3;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.comparison-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #111827;
+}
+
+.comparison-list {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* мобильная адаптация */
+@media (max-width: 640px) {
+  .comparison-grid {
+    grid-template-columns: 1fr;
+  }
+}
