@@ -257,3 +257,82 @@ button:hover {
     gap: 10px;
   }
 }
+
+/* ============================= */
+/* GLOBAL TYPOGRAPHY SCALE */
+/* ============================= */
+
+/* база остаётся как есть */
+:root {
+  font-size: 14px;
+}
+
+/* ----------------------------- */
+/* 1. HEADER (×1.35) */
+/* ----------------------------- */
+
+.header h1 {
+  font-size: calc(24px * 1.35); /* было 24px */
+}
+
+.header p {
+  font-size: calc(14px * 1.35);
+}
+
+/* ----------------------------- */
+/* 2. TOOLBAR TITLES */
+/* ----------------------------- */
+
+.toolbar-group legend {
+  font-size: calc(12px * 1.35);
+}
+
+/* ----------------------------- */
+/* 3. GLOBAL TEXT (кроме кнопок) */
+/* ----------------------------- */
+
+/* основной текст */
+.app-shell {
+  font-size: 1.35em;
+}
+
+/* но НЕ кнопки */
+button,
+.import-label {
+  font-size: 1em; /* возвращаем назад */
+}
+
+/* ----------------------------- */
+/* 4. PANELS / CONTENT */
+/* ----------------------------- */
+
+.panel {
+  font-size: 1.35em;
+}
+
+/* мета-инфо */
+.top-summary-meta {
+  font-size: 1em; /* уже увеличено через .app-shell */
+}
+
+/* comparison */
+.comparison-title {
+  font-size: 1.1em;
+}
+
+.comparison-stats {
+  font-size: 0.95em;
+}
+
+.comparison-list {
+  font-size: 1em;
+}
+
+/* batches */
+.batch-item {
+  font-size: 1em;
+}
+
+.header h1 {
+  letter-spacing: 0.3px;
+}

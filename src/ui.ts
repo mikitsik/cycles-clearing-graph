@@ -24,7 +24,7 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
     <div class="app-shell">
       <header class="header">
         <h1>Cycles Clearing Graph</h1>
-        <p>Local-first cycle clearing demo with settlement batches.</p>
+        <p>Local-first cycle clearing demo with settlement batches</p>
       </header>
 
       <section class="toolbar">
