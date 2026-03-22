@@ -295,7 +295,6 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
             })
             .join("");
 
-    cy.elements().remove();
     // --- build diff maps ---
     const beforeMap = new Map<string, number>();
     const afterMap = new Map<string, number>();
@@ -419,13 +418,21 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
 
     try {
       const text = await file.text();
-      const parsed = JSON.parse(text) as { obligations?: unknown };
+      const parsed = JSON.parse(text) as
+        | { obligations?: unknown }
+        | Array<Record<string, unknown>>;
 
-      if (!parsed || !Array.isArray(parsed.obligations)) {
-        throw new Error("Invalid JSON: expected { obligations: [...] }");
+      const rawItems = Array.isArray(parsed)
+        ? parsed
+        : parsed && Array.isArray(parsed.obligations)
+          ? parsed.obligations
+          : null;
+
+      if (!rawItems) {
+        throw new Error("Invalid JSON: expected an array or { obligations: [...] }");
       }
 
-      const obligations = parsed.obligations.map((item, index) => {
+      const obligations = rawItems.map((item, index) => {
         if (!item || typeof item !== "object") {
           throw new Error(`Invalid obligation at index ${index}`);
         }
@@ -448,6 +455,10 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
           to: row.to,
           amount: row.amount,
           unit: row.unit,
+          createdAt:
+            typeof row.createdAt === "string" && !Number.isNaN(Date.parse(row.createdAt))
+              ? row.createdAt
+              : new Date().toISOString(),
         };
       });
 
