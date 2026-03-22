@@ -115,6 +115,23 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
           width: 4,
         },
       },
+      {
+        selector: ".edge-reduced",
+        style: {
+          "line-color": "#16a34a",
+          "target-arrow-color": "#16a34a",
+          width: 4,
+        },
+      },
+      {
+        selector: ".edge-removed",
+        style: {
+          "line-color": "#dc2626",
+          "target-arrow-color": "#dc2626",
+          "line-style": "dashed",
+          width: 4,
+        },
+      },
     ],
     layout: { name: "cose" },
   });
@@ -262,20 +279,75 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
             .join("");
 
     cy.elements().remove();
+    // --- build diff maps ---
+    const beforeMap = new Map<string, number>();
+    const afterMap = new Map<string, number>();
+
+    if (state.beforeSnapshot) {
+      state.beforeSnapshot.forEach((o) => {
+        beforeMap.set(o.id, o.amount);
+      });
+    }
+
+    if (state.afterSnapshot) {
+      state.afterSnapshot.forEach((o) => {
+        afterMap.set(o.id, o.amount);
+      });
+    }
+
+    // --- build edges ---
+    const edges = [];
+
+    // текущие (after)
+    for (const o of state.obligations) {
+      let classes = "";
+
+      const beforeAmount = beforeMap.get(o.id);
+
+      if (beforeAmount !== undefined && state.afterSnapshot) {
+        if (o.amount < beforeAmount) {
+          classes = "edge-reduced";
+        }
+      }
+
+      edges.push({
+        data: {
+          id: o.id,
+          source: o.from,
+          target: o.to,
+          label: `${o.amount} ${o.unit}`,
+        },
+        classes,
+      });
+    }
+
+    // удалённые рёбра
+    if (state.beforeSnapshot && state.afterSnapshot) {
+      for (const before of state.beforeSnapshot) {
+        if (!afterMap.has(before.id)) {
+          edges.push({
+            data: {
+              id: "removed-" + before.id,
+              source: before.from,
+              target: before.to,
+              label: `0 ${before.unit}`,
+            },
+            classes: "edge-removed",
+          });
+        }
+      }
+    }
+
+    // --- render graph ---
+    cy.elements().remove();
+
     cy.add([
       ...state.nodes.map((node) => ({
         data: { id: node.id, label: node.label },
       })),
-      ...state.obligations.map((obligation) => ({
-        data: {
-          id: obligation.id,
-          source: obligation.from,
-          target: obligation.to,
-          label: `${obligation.amount} ${obligation.unit}`,
-        },
-        classes: selected.has(obligation.id) ? "cycle-edge" : "",
-      })),
+      ...edges,
     ]);
+
     cy.layout({ name: "cose", animate: false }).run();
 
     renderScenarioButtons();
