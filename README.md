@@ -84,7 +84,7 @@ npm run dev
 
 * Triangle cycle
 * Nested cycles
-* Liquidity loop
+* Overlapping cycles
 
 ---
 

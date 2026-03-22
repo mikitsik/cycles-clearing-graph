@@ -22,15 +22,6 @@ export function nestedScenario(): Obligation[] {
   ];
 }
 
-export function liquidityScenario(): Obligation[] {
-  return [
-    createObligation({ from: "L", to: "A", amount: 50, unit: UNIT }),
-    createObligation({ from: "A", to: "B", amount: 50, unit: UNIT }),
-    createObligation({ from: "B", to: "C", amount: 50, unit: UNIT }),
-    createObligation({ from: "C", to: "L", amount: 50, unit: UNIT }),
-  ];
-}
-
 export function overlappingScenario(): Obligation[] {
   return [
     createObligation({ from: "A", to: "B", amount: 8, unit: UNIT }),

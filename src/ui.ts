@@ -4,11 +4,10 @@ import { totalGross } from "./solver";
 import {
   triangleScenario,
   nestedScenario,
-  liquidityScenario,
   overlappingScenario,
 } from "./scenario";
 
-type ScenarioName = "triangle" | "nested" | "liquidity" | "overlapping";
+type ScenarioName = "triangle" | "nested" | "overlapping";
 
 type SnapshotObligation = {
   id: string;
@@ -31,7 +30,6 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
       <section class="toolbar">
         <button id="scenario-triangle">Triangle</button>
         <button id="scenario-nested">Nested</button>
-        <button id="scenario-liquidity">Liquidity</button>
         <button id="scenario-overlapping">Overlapping</button>
         <button id="solve-one">Resolve one cycle</button>
         <button id="solve-all">Resolve all cycles</button>
@@ -60,7 +58,6 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
 
   const triangleBtn = root.querySelector<HTMLButtonElement>("#scenario-triangle");
   const nestedBtn = root.querySelector<HTMLButtonElement>("#scenario-nested");
-  const liquidityBtn = root.querySelector<HTMLButtonElement>("#scenario-liquidity");
   const overlappingBtn = root.querySelector<HTMLButtonElement>("#scenario-overlapping");
 
   const solveOneBtn = root.querySelector<HTMLButtonElement>("#solve-one");
@@ -77,7 +74,6 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
     !batchesEl ||
     !triangleBtn ||
     !nestedBtn ||
-    !liquidityBtn ||
     !overlappingBtn ||
     !solveOneBtn ||
     !solveAllBtn ||
@@ -90,7 +86,6 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
   const scenarioButtons: Record<ScenarioName, HTMLButtonElement> = {
     triangle: triangleBtn,
     nested: nestedBtn,
-    liquidity: liquidityBtn,
     overlapping: overlappingBtn,
   };
 
@@ -320,11 +315,6 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
   nestedBtn.addEventListener("click", () => {
     activeScenario = "nested";
     store.actions.setObligations(nestedScenario());
-  });
-
-  liquidityBtn.addEventListener("click", () => {
-    activeScenario = "liquidity";
-    store.actions.setObligations(liquidityScenario());
   });
 
   overlappingBtn.addEventListener("click", () => {
