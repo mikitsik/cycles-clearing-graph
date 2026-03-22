@@ -28,14 +28,31 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
       </header>
 
       <section class="toolbar">
-        <button id="scenario-triangle">Triangle</button>
-        <button id="scenario-nested">Nested</button>
-        <button id="scenario-overlapping">Overlapping</button>
-        <button id="solve-one">Resolve one cycle</button>
-        <button id="solve-all">Resolve all cycles</button>
-        <button id="export-json">Export JSON</button>
-        <label for="import-json" class="import-label">Import JSON</label>
-        <input id="import-json" type="file" accept="application/json" style="display:none" />
+        <fieldset class="toolbar-group">
+          <legend>Scenarios</legend>
+          <div class="toolbar-row">
+            <button id="scenario-triangle" type="button">Triangle</button>
+            <button id="scenario-nested" type="button">Nested</button>
+            <button id="scenario-overlapping" type="button">Overlapping</button>
+          </div>
+        </fieldset>
+
+        <fieldset class="toolbar-group">
+          <legend>Actions</legend>
+          <div class="toolbar-row">
+            <button id="solve-one" type="button">Resolve one cycle</button>
+            <button id="solve-all" type="button">Resolve all cycles</button>
+          </div>
+        </fieldset>
+
+        <fieldset class="toolbar-group">
+          <legend>Data</legend>
+          <div class="toolbar-row">
+            <button id="export-json" type="button">Export JSON</button>
+            <label for="import-json" class="import-label">Import JSON</label>
+            <input id="import-json" type="file" accept="application/json" hidden />
+          </div>
+        </fieldset>
       </section>
 
       <section class="layout">
