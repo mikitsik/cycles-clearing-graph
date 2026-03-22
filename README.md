@@ -53,7 +53,7 @@ B → C: 30
 ##  Architecture
 
 * **Frontend:** TypeScript + Vite
-* **Graph engine:** custom cycle detection + clearing
+* **Graph engine:** validated local-first cycle clearing engine with batch-level invariants. Imported obligation datasets are validated for positive amounts, unique IDs, no self-loops, and single-unit consistency.
 * **State:** local-first store
 * **UI:** Cytoscape.js (graph visualization)
 
