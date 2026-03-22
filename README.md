@@ -1,4 +1,4 @@
-# Cycles Contribution Graph
+# Cycles Clearing Graph
 
 A local-first application for visualizing and resolving cyclic obligations using graph-based clearing.
 
