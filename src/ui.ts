@@ -213,6 +213,26 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
   const lastBatch = state.batches[state.batches.length - 1];
   const lastCleared = lastBatch ? lastBatch.beforeGross - lastBatch.afterGross : 0;
 
+  let beforeBlock = "";
+
+  if (state.beforeSnapshot && !state.afterSnapshot) {
+    const beforeHtml = state.beforeSnapshot
+      .map(
+        (o) =>
+          `${escapeHtml(o.from)} → ${escapeHtml(o.to)}: ${o.amount} ${escapeHtml(o.unit)}`
+      )
+      .join("<br>");
+
+    beforeBlock = `
+      <div class="metrics-before">
+        <div class="comparison-title">Before</div>
+        <div class="comparison-list">
+          ${beforeHtml}
+        </div>
+      </div>
+    `;
+  }
+
   metricsEl.innerHTML = `
     <div class="metrics-grid">
       <div class="metric-card"><strong>Total gross:</strong> ${totalGross(state.obligations)}</div>
@@ -221,9 +241,17 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
       <div class="metric-card"><strong>Last cleared:</strong> ${lastCleared}</div>
       <div class="metric-card"><strong>Scenario:</strong> ${activeScenario}</div>
     </div>
+
+    ${beforeBlock}
   `;
 
-  errorEl.innerHTML = `<strong>Status:</strong> ${escapeHtml(state.lastError ?? "OK")}`;
+  if (state.lastError) {
+    errorEl.innerHTML = `<strong>Error:</strong> ${escapeHtml(state.lastError)}`;
+    errorEl.style.display = "block";
+  } else {
+    errorEl.innerHTML = "";
+    errorEl.style.display = "none";
+  }
 
   if (state.beforeSnapshot && state.afterSnapshot) {
     const beforeGross = totalGross(state.beforeSnapshot);
@@ -266,33 +294,7 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
       </div>
     `;
   } else if (state.beforeSnapshot) {
-    const beforeGross = totalGross(state.beforeSnapshot);
-    const beforeCount = state.beforeSnapshot.length;
-    const beforeHtml = state.beforeSnapshot
-      .map(
-        (o) =>
-          `${escapeHtml(o.from)} → ${escapeHtml(o.to)}: ${o.amount} ${escapeHtml(o.unit)}`
-      )
-      .join("<br>");
-
-    comparisonEl.innerHTML = `
-      <div class="comparison-header">
-        <strong>Before</strong>
-        <div class="comparison-stats">
-          <span>Total gross: <b>${beforeGross}</b></span>
-          <span>Active obligations: ${beforeCount}</span>
-        </div>
-      </div>
-
-      <div class="comparison-grid">
-        <div class="comparison-col" style="grid-column: 1 / -1;">
-          <div class="comparison-title">Before</div>
-          <div class="comparison-list">
-            ${beforeHtml}
-          </div>
-        </div>
-      </div>
-    `;
+    comparisonEl.innerHTML = "";
   } else {
     comparisonEl.innerHTML = `
       <div><strong>Before / After</strong></div>

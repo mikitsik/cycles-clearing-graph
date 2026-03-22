@@ -234,3 +234,7 @@ button:hover {
   line-height: 1.6;
   white-space: normal;
 }
+
+.metrics-before {
+  margin-top: 12px;
+}
