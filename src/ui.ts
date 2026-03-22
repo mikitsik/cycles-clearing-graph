@@ -7,7 +7,7 @@ import {
   overlappingScenario,
 } from "./scenario";
 
-type ScenarioName = "triangle" | "nested" | "overlapping";
+type ScenarioName = "triangle" | "nested" | "overlapping" | "imported";
 
 type SnapshotObligation = {
   id: string;
@@ -42,7 +42,6 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
         <div class="left-col">
           <div id="metrics" class="panel"></div>
           <div id="error-box" class="panel"></div>
-          <div id="comparison" class="panel"></div>
           <div id="graph" class="graph-panel"></div>
         </div>
         <aside id="batches" class="panel side-panel"></aside>
@@ -53,7 +52,6 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
   const graphEl = root.querySelector<HTMLElement>("#graph");
   const metricsEl = root.querySelector<HTMLElement>("#metrics");
   const errorEl = root.querySelector<HTMLElement>("#error-box");
-  const comparisonEl = root.querySelector<HTMLElement>("#comparison");
   const batchesEl = root.querySelector<HTMLElement>("#batches");
 
   const triangleBtn = root.querySelector<HTMLButtonElement>("#scenario-triangle");
@@ -70,7 +68,6 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
     !graphEl ||
     !metricsEl ||
     !errorEl ||
-    !comparisonEl ||
     !batchesEl ||
     !triangleBtn ||
     !nestedBtn ||
@@ -83,7 +80,7 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
     throw new Error("UI mount failed: missing elements");
   }
 
-  const scenarioButtons: Record<ScenarioName, HTMLButtonElement> = {
+  const scenarioButtons: Record<Exclude<ScenarioName, "imported">, HTMLButtonElement> = {
     triangle: triangleBtn,
     nested: nestedBtn,
     overlapping: overlappingBtn,
@@ -123,255 +120,182 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
   });
 
   function renderScenarioButtons(): void {
-    (Object.keys(scenarioButtons) as ScenarioName[]).forEach((name) => {
-      const btn = scenarioButtons[name];
-      btn.style.fontWeight = name === activeScenario ? "700" : "400";
-      btn.style.outline = name === activeScenario ? "2px solid #333" : "";
-      btn.style.outlineOffset = name === activeScenario ? "2px" : "";
-    });
+    (Object.keys(scenarioButtons) as Array<Exclude<ScenarioName, "imported">>).forEach(
+      (name) => {
+        const btn = scenarioButtons[name];
+        btn.style.fontWeight = name === activeScenario ? "700" : "400";
+        btn.style.outline = name === activeScenario ? "2px solid #333" : "";
+        btn.style.outlineOffset = name === activeScenario ? "2px" : "";
+      }
+    );
+
+    if (activeScenario === "imported") {
+      triangleBtn.style.fontWeight = "400";
+      nestedBtn.style.fontWeight = "400";
+      overlappingBtn.style.fontWeight = "400";
+
+      triangleBtn.style.outline = "";
+      nestedBtn.style.outline = "";
+      overlappingBtn.style.outline = "";
+    }
   }
 
   function escapeHtml(value: string): string {
     return value
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#39;");
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
-  function formatBeforeAfterLists(
-    before: SnapshotObligation[],
-    after: SnapshotObligation[],
-  ): { beforeHtml: string; afterHtml: string } {
-    const afterMap = new Map(after.map((o) => [o.id, o]));
-
-    const beforeLines: string[] = [];
-    const afterLines: string[] = [];
-
-    for (const prev of before) {
-      const next = afterMap.get(prev.id);
-
-      beforeLines.push(
-        `${escapeHtml(prev.from)} → ${escapeHtml(prev.to)}: ${prev.amount} ${escapeHtml(prev.unit)}`
-      );
-
-      if (!next) {
-        afterLines.push(
-          `<span class="diff-removed">removed</span>`
-        );
-        continue;
-      }
-
-      if (next.amount !== prev.amount) {
-        afterLines.push(
-          `<span class="diff-reduced">${escapeHtml(next.from)} → ${escapeHtml(next.to)}: ${next.amount} ${escapeHtml(next.unit)}</span>`
-        );
-      } else {
-        afterLines.push(
-          `${escapeHtml(next.from)} → ${escapeHtml(next.to)}: ${next.amount} ${escapeHtml(next.unit)}`
-        );
-      }
+  function obligationsToHtml(items: SnapshotObligation[]): string {
+    if (items.length === 0) {
+      return `<span class="diff-removed">All cleared</span>`;
     }
 
-    return {
-      beforeHtml: beforeLines.join("<br>"),
-      afterHtml: afterLines.join("<br>"),
-    };
-  }
-
-  function diffObligations(
-    before: SnapshotObligation[],
-    after: SnapshotObligation[],
-  ): string {
-    const afterMap = new Map(after.map((o) => [o.id, o]));
-    const lines: string[] = [];
-
-    for (const prev of before) {
-      const next = afterMap.get(prev.id);
-
-      if (!next) {
-        lines.push(
-          `<span class="diff-removed">${escapeHtml(prev.from)} → ${escapeHtml(prev.to)}: ${prev.amount} ${escapeHtml(prev.unit)} → removed</span>`
-        );
-        continue;
-      }
-
-      if (next.amount !== prev.amount) {
-        lines.push(
-          `<span class="diff-reduced">${escapeHtml(prev.from)} → ${escapeHtml(prev.to)}: ${prev.amount} ${escapeHtml(prev.unit)} → ${next.amount} ${escapeHtml(next.unit)}</span>`
-        );
-      }
-    }
-
-    return lines.length > 0 ? lines.join("<br>") : "No changes";
-  }
-
-function render(): void {
-  const state = store.getState();
-  const selected = new Set(state.selectedCycleObligationIds);
-  const lastBatch = state.batches[state.batches.length - 1];
-  const lastCleared = lastBatch ? lastBatch.beforeGross - lastBatch.afterGross : 0;
-
-  const currentGross = totalGross(state.obligations);
-  const currentCount = state.obligations.length;
-
-  let detailsBlock = "";
-
-  if (state.beforeSnapshot && state.afterSnapshot) {
-    const beforeGross = totalGross(state.beforeSnapshot);
-    const afterGross = totalGross(state.afterSnapshot);
-    const cleared = beforeGross - afterGross;
-
-    const beforeHtml = state.beforeSnapshot
+    return items
       .map(
         (o) =>
           `${escapeHtml(o.from)} → ${escapeHtml(o.to)}: ${o.amount} ${escapeHtml(o.unit)}`
       )
       .join("<br>");
-
-    const afterHtml =
-      state.afterSnapshot.length > 0
-        ? state.afterSnapshot
-            .map(
-              (o) =>
-                `${escapeHtml(o.from)} → ${escapeHtml(o.to)}: ${o.amount} ${escapeHtml(o.unit)}`
-            )
-            .join("<br>")
-        : `<span class="diff-removed">All cleared</span>`;
-
-    detailsBlock = `
-      <div class="top-details-grid">
-        <div class="comparison-col">
-          <div class="comparison-title">Before</div>
-          <div class="comparison-stats">
-            <span>Total gross: <b>${beforeGross}</b></span>
-            <span>Active obligations: ${state.beforeSnapshot.length}</span>
-          </div>
-          <div class="comparison-list">
-            ${beforeHtml}
-          </div>
-        </div>
-
-        <div class="comparison-col">
-          <div class="comparison-title">After</div>
-          <div class="comparison-stats">
-            <span>Cleared: <b>${cleared}</b></span>
-            <span>Total gross: ${afterGross}</span>
-            <span>Active obligations: ${state.afterSnapshot.length}</span>
-          </div>
-          <div class="comparison-list">
-            ${afterHtml}
-          </div>
-        </div>
-      </div>
-    `;
-  } else if (state.beforeSnapshot) {
-    const beforeGross = totalGross(state.beforeSnapshot);
-    const beforeHtml = state.beforeSnapshot
-      .map(
-        (o) =>
-          `${escapeHtml(o.from)} → ${escapeHtml(o.to)}: ${o.amount} ${escapeHtml(o.unit)}`
-      )
-      .join("<br>");
-
-    detailsBlock = `
-      <div class="top-details-grid top-details-single">
-        <div class="comparison-col">
-          <div class="comparison-title">Before</div>
-          <div class="comparison-stats">
-            <span>Total gross: <b>${beforeGross}</b></span>
-            <span>Active obligations: ${state.beforeSnapshot.length}</span>
-          </div>
-          <div class="comparison-list">
-            ${beforeHtml}
-          </div>
-        </div>
-      </div>
-    `;
   }
 
-  metricsEl.innerHTML = `
-    <div class="metrics-grid">
-      <div class="metric-card"><strong>Total gross:</strong> ${currentGross}</div>
-      <div class="metric-card"><strong>Active obligations:</strong> ${currentCount}</div>
-      <div class="metric-card"><strong>Batches:</strong> ${state.batches.length}</div>
-      <div class="metric-card"><strong>Last cleared:</strong> ${lastCleared}</div>
-      <div class="metric-card"><strong>Scenario:</strong> ${activeScenario}</div>
-    </div>
+  function render(): void {
+    const state = store.getState();
+    const selected = new Set(state.selectedCycleObligationIds);
+    const lastBatch = state.batches[state.batches.length - 1];
+    const lastCleared = lastBatch ? lastBatch.beforeGross - lastBatch.afterGross : 0;
 
-    ${detailsBlock}
-  `;
+    let topBlock = `
+      <div class="top-summary-meta">
+        <div><strong>Scenario:</strong> ${escapeHtml(activeScenario)}</div>
+        <div><strong>Batches:</strong> ${state.batches.length}</div>
+        <div><strong>Last cleared:</strong> ${lastCleared}</div>
+      </div>
+    `;
 
-  if (state.lastError) {
-    errorEl.innerHTML = `<strong>Error:</strong> ${escapeHtml(state.lastError)}`;
-    errorEl.style.display = "block";
-  } else {
-    errorEl.innerHTML = "";
-    errorEl.style.display = "none";
+    if (state.beforeSnapshot && state.afterSnapshot) {
+      const beforeGross = totalGross(state.beforeSnapshot);
+      const afterGross = totalGross(state.afterSnapshot);
+      const cleared = beforeGross - afterGross;
+
+      topBlock += `
+        <div class="top-details-grid">
+          <div class="comparison-col">
+            <div class="comparison-title">Before</div>
+            <div class="comparison-stats">
+              <span>Total gross: <b>${beforeGross}</b></span>
+              <span>Active obligations: ${state.beforeSnapshot.length}</span>
+            </div>
+            <div class="comparison-list">
+              ${obligationsToHtml(state.beforeSnapshot)}
+            </div>
+          </div>
+
+          <div class="comparison-col">
+            <div class="comparison-title">After</div>
+            <div class="comparison-stats">
+              <span>Cleared: <b>${cleared}</b></span>
+              <span>Total gross: ${afterGross}</span>
+              <span>Active obligations: ${state.afterSnapshot.length}</span>
+            </div>
+            <div class="comparison-list">
+              ${obligationsToHtml(state.afterSnapshot)}
+            </div>
+          </div>
+        </div>
+      `;
+    } else if (state.beforeSnapshot) {
+      const beforeGross = totalGross(state.beforeSnapshot);
+
+      topBlock += `
+        <div class="top-details-grid top-details-single">
+          <div class="comparison-col">
+            <div class="comparison-title">Before</div>
+            <div class="comparison-stats">
+              <span>Total gross: <b>${beforeGross}</b></span>
+              <span>Active obligations: ${state.beforeSnapshot.length}</span>
+            </div>
+            <div class="comparison-list">
+              ${obligationsToHtml(state.beforeSnapshot)}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    metricsEl.innerHTML = topBlock;
+
+    if (state.lastError) {
+      errorEl.innerHTML = `<strong>Error:</strong> ${escapeHtml(state.lastError)}`;
+      errorEl.style.display = "block";
+    } else {
+      errorEl.innerHTML = "";
+      errorEl.style.display = "none";
+    }
+
+    batchesEl.innerHTML =
+      state.batches.length === 0
+        ? `<p>No settlement batches yet.</p>`
+        : state.batches
+            .map((batch, index) => {
+              const cleared = batch.beforeGross - batch.afterGross;
+              const recordsHtml = batch.records
+                .map(
+                  (record) =>
+                    `<li>${escapeHtml(record.from)} → ${escapeHtml(record.to)}: -${record.delta}</li>`
+                )
+                .join("");
+
+              return `
+                <div class="batch-item">
+                  <div><strong>Batch ${index + 1}</strong></div>
+                  <div>strategy: ${escapeHtml(batch.strategy)}</div>
+                  <div>records: ${batch.records.length}</div>
+                  <div>cleared: ${cleared}</div>
+                  <ul>${recordsHtml}</ul>
+                </div>
+              `;
+            })
+            .join("");
+
+    cy.elements().remove();
+    cy.add([
+      ...state.nodes.map((node) => ({
+        data: { id: node.id, label: node.label },
+      })),
+      ...state.obligations.map((obligation) => ({
+        data: {
+          id: obligation.id,
+          source: obligation.from,
+          target: obligation.to,
+          label: `${obligation.amount} ${obligation.unit}`,
+        },
+        classes: selected.has(obligation.id) ? "cycle-edge" : "",
+      })),
+    ]);
+    cy.layout({ name: "cose", animate: false }).run();
+
+    renderScenarioButtons();
   }
 
-  comparisonEl.innerHTML = "";
+  function loadScenario(name: Exclude<ScenarioName, "imported">): void {
+    activeScenario = name;
 
-  batchesEl.innerHTML =
-    state.batches.length === 0
-      ? `<p>No settlement batches yet.</p>`
-      : state.batches
-          .map((batch, index) => {
-            const cleared = batch.beforeGross - batch.afterGross;
-            const recordsHtml = batch.records
-              .map(
-                (record) =>
-                  `<li>${escapeHtml(record.from)} → ${escapeHtml(record.to)}: -${record.delta}</li>`
-              )
-              .join("");
+    if (name === "triangle") {
+      store.actions.setObligations(triangleScenario());
+    } else if (name === "nested") {
+      store.actions.setObligations(nestedScenario());
+    } else {
+      store.actions.setObligations(overlappingScenario());
+    }
+  }
 
-            return `
-              <div class="batch-item">
-                <div><strong>Batch ${index + 1}</strong></div>
-                <div>strategy: ${escapeHtml(batch.strategy)}</div>
-                <div>records: ${batch.records.length}</div>
-                <div>cleared: ${cleared}</div>
-                <ul>${recordsHtml}</ul>
-              </div>
-            `;
-          })
-          .join("");
-
-  cy.elements().remove();
-  cy.add([
-    ...state.nodes.map((node) => ({
-      data: { id: node.id, label: node.label },
-    })),
-    ...state.obligations.map((obligation) => ({
-      data: {
-        id: obligation.id,
-        source: obligation.from,
-        target: obligation.to,
-        label: `${obligation.amount} ${obligation.unit}`,
-      },
-      classes: selected.has(obligation.id) ? "cycle-edge" : "",
-    })),
-  ]);
-  cy.layout({ name: "cose", animate: false }).run();
-
-  renderScenarioButtons();
-}
-
-  triangleBtn.addEventListener("click", () => {
-    activeScenario = "triangle";
-    store.actions.setObligations(triangleScenario());
-  });
-
-  nestedBtn.addEventListener("click", () => {
-    activeScenario = "nested";
-    store.actions.setObligations(nestedScenario());
-  });
-
-  overlappingBtn.addEventListener("click", () => {
-    activeScenario = "overlapping";
-    store.actions.setObligations(overlappingScenario());
-  });
+  triangleBtn.addEventListener("click", () => loadScenario("triangle"));
+  nestedBtn.addEventListener("click", () => loadScenario("nested"));
+  overlappingBtn.addEventListener("click", () => loadScenario("overlapping"));
 
   solveOneBtn.addEventListener("click", () => {
     store.actions.solveOneCycle();
@@ -383,10 +307,9 @@ function render(): void {
 
   exportBtn.addEventListener("click", () => {
     const state = store.getState();
+
     const payload = {
-      nodes: state.nodes,
       obligations: state.obligations,
-      batches: state.batches,
     };
 
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
@@ -394,37 +317,55 @@ function render(): void {
     });
 
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "cycles-graph.json";
-    link.click();
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "cycles-graph.json";
+    a.click();
     URL.revokeObjectURL(url);
   });
 
-  importInput.addEventListener("change", async (event) => {
-    const file = (event.target as HTMLInputElement).files?.[0];
+  importInput.addEventListener("change", async () => {
+    const file = importInput.files?.[0];
     if (!file) return;
 
     try {
       const text = await file.text();
-      const parsed = JSON.parse(text) as {
-        obligations?: Array<{
-          id: string;
-          from: string;
-          to: string;
-          amount: number;
-          unit: string;
-          createdAt: string;
-        }>;
-      };
+      const parsed = JSON.parse(text) as { obligations?: unknown };
 
-      if (!parsed.obligations || !Array.isArray(parsed.obligations)) {
-        throw new Error("JSON must contain obligations array");
+      if (!parsed || !Array.isArray(parsed.obligations)) {
+        throw new Error("Invalid JSON: expected { obligations: [...] }");
       }
 
-      store.actions.setObligations(parsed.obligations);
+      const obligations = parsed.obligations.map((item, index) => {
+        if (!item || typeof item !== "object") {
+          throw new Error(`Invalid obligation at index ${index}`);
+        }
+
+        const row = item as Record<string, unknown>;
+
+        if (
+          typeof row.id !== "string" ||
+          typeof row.from !== "string" ||
+          typeof row.to !== "string" ||
+          typeof row.amount !== "number" ||
+          typeof row.unit !== "string"
+        ) {
+          throw new Error(`Invalid obligation fields at index ${index}`);
+        }
+
+        return {
+          id: row.id,
+          from: row.from,
+          to: row.to,
+          amount: row.amount,
+          unit: row.unit,
+        };
+      });
+
+      activeScenario = "imported";
+      store.actions.setObligations(obligations);
+      store.actions.clearError();
     } catch (error) {
-      console.error(error);
       store.actions.setError(
         error instanceof Error ? error.message : "Failed to import JSON"
       );
@@ -434,5 +375,5 @@ function render(): void {
   });
 
   store.subscribe(render);
-  render();
+  loadScenario("triangle");
 }

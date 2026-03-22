@@ -113,19 +113,6 @@ button:hover {
   border-top: 1px solid #eef0f3;
 }
 
-#metrics {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-}
-
-#metrics > div {
-  background: #f9fafb;
-  border: 1px solid #eef0f3;
-  border-radius: 10px;
-  padding: 10px 12px;
-}
-
 #error-box {
   min-height: 24px;
 }
@@ -142,19 +129,11 @@ button:hover {
   .layout {
     grid-template-columns: 1fr;
   }
-
-  #metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 640px) {
   .app-shell {
     padding: 14px;
-  }
-
-  #metrics {
-    grid-template-columns: 1fr;
   }
 
   .graph-panel {
@@ -254,4 +233,114 @@ button:hover {
   .top-details-grid {
     grid-template-columns: 1fr;
   }
+}
+.top-summary-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: #f9fafb;
+  border: 1px solid #eef0f3;
+  border-radius: 10px;
+}
+
+#metrics {
+  display: block;
+}
+
+.top-summary-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: #f9fafb;
+  border: 1px solid #eef0f3;
+  border-radius: 10px;
+}
+
+.top-summary-meta > div {
+  white-space: nowrap;
+}
+
+/* --- TOP BLOCK POLISH (cards style) --- */
+
+.top-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.top-details-single {
+  grid-template-columns: 1fr;
+}
+
+.comparison-col {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.comparison-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #111827;
+}
+
+.comparison-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+  color: #374151;
+}
+
+.comparison-list {
+  line-height: 1.6;
+}
+
+.diff-removed {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* --- GLOBAL FONT SCALE --- */
+
+body {
+  font-size: 1.6rem;
+}
+
+/* заголовки */
+h1 {
+  font-size: 2.2rem;
+}
+
+/* кнопки */
+button {
+  font-size: 1.5rem;
+  padding: 10px 16px;
+}
+
+/* мета-блок */
+.top-summary-meta {
+  font-size: 1.5rem;
+}
+
+/* списки обязательств */
+.comparison-list {
+  font-size: 1.5rem;
+}
+
+/* статистика */
+.comparison-stats {
+  font-size: 1.4rem;
+}
+
+/* batch panel */
+.batch-item {
+  font-size: 1.4rem;
 }
