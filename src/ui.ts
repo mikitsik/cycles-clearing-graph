@@ -207,15 +207,22 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
     return lines.length > 0 ? lines.join("<br>") : "No changes";
   }
 
-  function render(): void {
+function render(): void {
   const state = store.getState();
   const selected = new Set(state.selectedCycleObligationIds);
   const lastBatch = state.batches[state.batches.length - 1];
   const lastCleared = lastBatch ? lastBatch.beforeGross - lastBatch.afterGross : 0;
 
-  let beforeBlock = "";
+  const currentGross = totalGross(state.obligations);
+  const currentCount = state.obligations.length;
 
-  if (state.beforeSnapshot && !state.afterSnapshot) {
+  let detailsBlock = "";
+
+  if (state.beforeSnapshot && state.afterSnapshot) {
+    const beforeGross = totalGross(state.beforeSnapshot);
+    const afterGross = totalGross(state.afterSnapshot);
+    const cleared = beforeGross - afterGross;
+
     const beforeHtml = state.beforeSnapshot
       .map(
         (o) =>
@@ -223,11 +230,62 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
       )
       .join("<br>");
 
-    beforeBlock = `
-      <div class="metrics-before">
-        <div class="comparison-title">Before</div>
-        <div class="comparison-list">
-          ${beforeHtml}
+    const afterHtml =
+      state.afterSnapshot.length > 0
+        ? state.afterSnapshot
+            .map(
+              (o) =>
+                `${escapeHtml(o.from)} → ${escapeHtml(o.to)}: ${o.amount} ${escapeHtml(o.unit)}`
+            )
+            .join("<br>")
+        : `<span class="diff-removed">All cleared</span>`;
+
+    detailsBlock = `
+      <div class="top-details-grid">
+        <div class="comparison-col">
+          <div class="comparison-title">Before</div>
+          <div class="comparison-stats">
+            <span>Total gross: <b>${beforeGross}</b></span>
+            <span>Active obligations: ${state.beforeSnapshot.length}</span>
+          </div>
+          <div class="comparison-list">
+            ${beforeHtml}
+          </div>
+        </div>
+
+        <div class="comparison-col">
+          <div class="comparison-title">After</div>
+          <div class="comparison-stats">
+            <span>Cleared: <b>${cleared}</b></span>
+            <span>Total gross: ${afterGross}</span>
+            <span>Active obligations: ${state.afterSnapshot.length}</span>
+          </div>
+          <div class="comparison-list">
+            ${afterHtml}
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (state.beforeSnapshot) {
+    const beforeGross = totalGross(state.beforeSnapshot);
+    const beforeHtml = state.beforeSnapshot
+      .map(
+        (o) =>
+          `${escapeHtml(o.from)} → ${escapeHtml(o.to)}: ${o.amount} ${escapeHtml(o.unit)}`
+      )
+      .join("<br>");
+
+    detailsBlock = `
+      <div class="top-details-grid top-details-single">
+        <div class="comparison-col">
+          <div class="comparison-title">Before</div>
+          <div class="comparison-stats">
+            <span>Total gross: <b>${beforeGross}</b></span>
+            <span>Active obligations: ${state.beforeSnapshot.length}</span>
+          </div>
+          <div class="comparison-list">
+            ${beforeHtml}
+          </div>
         </div>
       </div>
     `;
@@ -235,14 +293,14 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
 
   metricsEl.innerHTML = `
     <div class="metrics-grid">
-      <div class="metric-card"><strong>Total gross:</strong> ${totalGross(state.obligations)}</div>
-      <div class="metric-card"><strong>Active obligations:</strong> ${state.obligations.length}</div>
+      <div class="metric-card"><strong>Total gross:</strong> ${currentGross}</div>
+      <div class="metric-card"><strong>Active obligations:</strong> ${currentCount}</div>
       <div class="metric-card"><strong>Batches:</strong> ${state.batches.length}</div>
       <div class="metric-card"><strong>Last cleared:</strong> ${lastCleared}</div>
       <div class="metric-card"><strong>Scenario:</strong> ${activeScenario}</div>
     </div>
 
-    ${beforeBlock}
+    ${detailsBlock}
   `;
 
   if (state.lastError) {
@@ -253,54 +311,7 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
     errorEl.style.display = "none";
   }
 
-  if (state.beforeSnapshot && state.afterSnapshot) {
-    const beforeGross = totalGross(state.beforeSnapshot);
-    const afterGross = totalGross(state.afterSnapshot);
-    const cleared = beforeGross - afterGross;
-    const { beforeHtml, afterHtml } = formatBeforeAfterLists(
-      state.beforeSnapshot,
-      state.afterSnapshot,
-    );
-
-    comparisonEl.innerHTML = `
-      <div class="comparison-header">
-        <strong>Before / After</strong>
-        <div class="comparison-stats">
-          <span>Cleared: <b>${cleared}</b></span>
-          <span>Before: ${beforeGross}</span>
-          <span>After: ${afterGross}</span>
-        </div>
-      </div>
-
-      <div class="comparison-diff">
-        <strong>Changed edges</strong><br>
-        ${diffObligations(state.beforeSnapshot, state.afterSnapshot)}
-      </div>
-
-      <div class="comparison-grid">
-        <div class="comparison-col">
-          <div class="comparison-title">Before</div>
-          <div class="comparison-list">
-            ${beforeHtml}
-          </div>
-        </div>
-
-        <div class="comparison-col">
-          <div class="comparison-title">After</div>
-          <div class="comparison-list">
-            ${afterHtml}
-          </div>
-        </div>
-      </div>
-    `;
-  } else if (state.beforeSnapshot) {
-    comparisonEl.innerHTML = "";
-  } else {
-    comparisonEl.innerHTML = `
-      <div><strong>Before / After</strong></div>
-      <div style="margin-top: 8px;">No graph loaded yet.</div>
-    `;
-  }
+  comparisonEl.innerHTML = "";
 
   batchesEl.innerHTML =
     state.batches.length === 0
@@ -411,7 +422,6 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
         throw new Error("JSON must contain obligations array");
       }
 
-      activeScenario = "triangle";
       store.actions.setObligations(parsed.obligations);
     } catch (error) {
       console.error(error);

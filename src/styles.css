@@ -238,3 +238,20 @@ button:hover {
 .metrics-before {
   margin-top: 12px;
 }
+
+.top-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.top-details-single {
+  grid-template-columns: 1fr;
+}
+
+@media (max-width: 640px) {
+  .top-details-grid {
+    grid-template-columns: 1fr;
+  }
+}

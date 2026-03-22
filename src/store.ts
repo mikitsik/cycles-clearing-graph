@@ -60,7 +60,7 @@ export function createAppStore(initialObligations: Obligation[]) {
           ...current,
           obligations: result.updatedObligations,
           batches: result.batch ? [...current.batches, result.batch] : current.batches,
-          selectedCycleObligationIds: [],
+          selectedCycleObligationIds: result.cycle ? result.cycle.map((edge) => edge.id) : [],
           lastError: null,
           beforeSnapshot: result.batch ? before : current.beforeSnapshot,
           afterSnapshot: result.batch
