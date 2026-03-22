@@ -16,34 +16,67 @@ export function createAppStore(initialObligations: Obligation[]) {
     listeners.forEach((listener) => listener());
   }
 
+  function updateState(updater: (current: AppState) => AppState): void {
+    setState(updater(state));
+  }
+
   function subscribe(listener: () => void): () => void {
     listeners.add(listener);
     return () => listeners.delete(listener);
   }
 
   const actions = {
+    clearError(): void {
+      updateState((current) => ({ ...current, lastError: null }));
+    },
+
     setObligations(obligations: Obligation[]): void {
-      setState(createInitialState(obligations));
+      try {
+        setState(createInitialState(obligations));
+      } catch (error) {
+        updateState((current) => ({
+          ...current,
+          lastError: error instanceof Error ? error.message : "Failed to set obligations",
+        }));
+      }
     },
 
     solveOneCycle(): void {
-      const result = solveOneCycleMinEdge(state.obligations);
-      setState({
-        ...state,
-        obligations: result.updatedObligations,
-        batches: result.batch ? [...state.batches, result.batch] : state.batches,
-        selectedCycleObligationIds: result.cycle ? result.cycle.map((edge) => edge.id) : [],
-      });
+      try {
+        const result = solveOneCycleMinEdge(state.obligations);
+
+        updateState((current) => ({
+          ...current,
+          obligations: result.updatedObligations,
+          batches: result.batch ? [...current.batches, result.batch] : current.batches,
+          selectedCycleObligationIds: [],
+          lastError: null,
+        }));
+      } catch (error) {
+        updateState((current) => ({
+          ...current,
+          lastError: error instanceof Error ? error.message : "Failed to resolve cycle",
+        }));
+      }
     },
 
     solveAllCycles(): void {
-      const result = resolveAllCycles(state.obligations);
-      setState({
-        ...state,
-        obligations: result.updatedObligations,
-        batches: [...state.batches, ...result.batches],
-        selectedCycleObligationIds: [],
-      });
+      try {
+        const result = resolveAllCycles(state.obligations);
+
+        updateState((current) => ({
+          ...current,
+          obligations: result.updatedObligations,
+          batches: [...current.batches, ...result.batches],
+          selectedCycleObligationIds: [],
+          lastError: null,
+        }));
+      } catch (error) {
+        updateState((current) => ({
+          ...current,
+          lastError: error instanceof Error ? error.message : "Failed to resolve all cycles",
+        }));
+      }
     },
   };
 
