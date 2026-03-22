@@ -8,7 +8,15 @@ import {
   overlappingScenario,
 } from "./scenario";
 
-type ScenarioName = "triangle" | "nested" | "liquidity";
+type ScenarioName = "triangle" | "nested" | "liquidity" | "overlapping";
+
+type SnapshotObligation = {
+  id: string;
+  from: string;
+  to: string;
+  amount: number;
+  unit: string;
+};
 
 export function mountUI(root: HTMLElement, store: AppStore): void {
   let activeScenario: ScenarioName = "triangle";
@@ -46,8 +54,9 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
 
   const graphEl = root.querySelector<HTMLElement>("#graph");
   const metricsEl = root.querySelector<HTMLElement>("#metrics");
-  const batchesEl = root.querySelector<HTMLElement>("#batches");
+  const errorEl = root.querySelector<HTMLElement>("#error-box");
   const comparisonEl = root.querySelector<HTMLElement>("#comparison");
+  const batchesEl = root.querySelector<HTMLElement>("#batches");
 
   const triangleBtn = root.querySelector<HTMLButtonElement>("#scenario-triangle");
   const nestedBtn = root.querySelector<HTMLButtonElement>("#scenario-nested");
@@ -59,7 +68,6 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
 
   const exportBtn = root.querySelector<HTMLButtonElement>("#export-json");
   const importInput = root.querySelector<HTMLInputElement>("#import-json");
-  const errorEl = root.querySelector<HTMLElement>("#error-box");
 
   if (
     !graphEl ||
@@ -83,6 +91,7 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
     triangle: triangleBtn,
     nested: nestedBtn,
     liquidity: liquidityBtn,
+    overlapping: overlappingBtn,
   };
 
   const cy = cytoscape({
@@ -127,6 +136,55 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
     });
   }
 
+  function escapeHtml(value: string): string {
+    return value
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  function formatObligationList(obligations: SnapshotObligation[]): string {
+    if (obligations.length === 0) {
+      return "—";
+    }
+
+    return obligations
+      .map(
+        (o) =>
+          `${escapeHtml(o.from)} → ${escapeHtml(o.to)}: ${o.amount} ${escapeHtml(o.unit)}`
+      )
+      .join("<br>");
+  }
+
+  function diffObligations(
+    before: SnapshotObligation[],
+    after: SnapshotObligation[],
+  ): string {
+    const afterMap = new Map(after.map((o) => [o.id, o]));
+    const lines: string[] = [];
+
+    for (const prev of before) {
+      const next = afterMap.get(prev.id);
+
+      if (!next) {
+        lines.push(
+          `${escapeHtml(prev.from)} → ${escapeHtml(prev.to)}: ${prev.amount} ${escapeHtml(prev.unit)} → removed`
+        );
+        continue;
+      }
+
+      if (next.amount !== prev.amount) {
+        lines.push(
+          `${escapeHtml(prev.from)} → ${escapeHtml(prev.to)}: ${prev.amount} ${escapeHtml(prev.unit)} → ${next.amount} ${escapeHtml(next.unit)}`
+        );
+      }
+    }
+
+    return lines.length > 0 ? lines.join("<br>") : "No changes";
+  }
+
   function render(): void {
     const state = store.getState();
     const selected = new Set(state.selectedCycleObligationIds);
@@ -138,31 +196,66 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
       <div><strong>Active obligations:</strong> ${state.obligations.length}</div>
       <div><strong>Batches:</strong> ${state.batches.length}</div>
       <div><strong>Last cleared:</strong> ${lastCleared}</div>
-      <div><strong>Scenario:</strong> ${activeScenario}</div>
+      <div><strong>Scenario:</strong> ${escapeHtml(activeScenario)}</div>
     `;
 
     errorEl.innerHTML = state.lastError
-      ? `<div><strong>Error:</strong> ${state.lastError}</div>`
+      ? `<div><strong>Error:</strong> ${escapeHtml(state.lastError)}</div>`
       : `<div><strong>Status:</strong> OK</div>`;
+
+    if (state.beforeSnapshot && state.afterSnapshot) {
+      const beforeGross = totalGross(state.beforeSnapshot);
+      const afterGross = totalGross(state.afterSnapshot);
+      const cleared = beforeGross - afterGross;
+
+      comparisonEl.innerHTML = `
+        <div><strong>Before / After</strong></div>
+        <div style="margin-top: 8px;"><strong>Cleared:</strong> ${cleared}</div>
+        <div><strong>Before gross:</strong> ${beforeGross}</div>
+        <div><strong>After gross:</strong> ${afterGross}</div>
+
+        <div style="margin-top: 10px;">
+          <strong>Changed edges</strong><br>
+          ${diffObligations(state.beforeSnapshot, state.afterSnapshot)}
+        </div>
+
+        <div style="margin-top: 10px;">
+          <strong>Before</strong><br>
+          ${formatObligationList(state.beforeSnapshot)}
+        </div>
+
+        <div style="margin-top: 10px;">
+          <strong>After</strong><br>
+          ${formatObligationList(state.afterSnapshot)}
+        </div>
+      `;
+    } else {
+      comparisonEl.innerHTML = `
+        <div><strong>Before / After</strong></div>
+        <div style="margin-top: 8px;">No settlement comparison yet.</div>
+      `;
+    }
 
     batchesEl.innerHTML =
       state.batches.length === 0
         ? `<p>No settlement batches yet.</p>`
         : state.batches
             .map(
-              (batch) => `
-          <div class="batch-item">
-            <div><strong>${batch.strategy}</strong></div>
-            <div>records: ${batch.records.length}</div>
-            <div>cleared: ${batch.beforeGross - batch.afterGross}</div>
-          </div>
-        `
+              (batch, index) => `
+                <div class="batch-item">
+                  <div><strong>#${index + 1} — ${escapeHtml(batch.strategy)}</strong></div>
+                  <div>records: ${batch.records.length}</div>
+                  <div>cleared: ${batch.beforeGross - batch.afterGross}</div>
+                </div>
+              `
             )
             .join("");
 
     cy.elements().remove();
     cy.add([
-      ...state.nodes.map((node) => ({ data: { id: node.id, label: node.label } })),
+      ...state.nodes.map((node) => ({
+        data: { id: node.id, label: node.label },
+      })),
       ...state.obligations.map((obligation) => ({
         data: {
           id: obligation.id,
@@ -198,8 +291,13 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
     store.actions.setObligations(overlappingScenario());
   });
 
-  solveOneBtn.addEventListener("click", () => store.actions.solveOneCycle());
-  solveAllBtn.addEventListener("click", () => store.actions.solveAllCycles());
+  solveOneBtn.addEventListener("click", () => {
+    store.actions.solveOneCycle();
+  });
+
+  solveAllBtn.addEventListener("click", () => {
+    store.actions.solveAllCycles();
+  });
 
   exportBtn.addEventListener("click", () => {
     const state = store.getState();
