@@ -218,3 +218,19 @@ button:hover {
     grid-template-columns: 1fr;
   }
 }
+
+.diff-reduced {
+  color: #15803d;
+  font-weight: 600;
+}
+
+.diff-removed {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.comparison-list {
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: normal;
+}

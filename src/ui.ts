@@ -145,17 +145,44 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
       .replaceAll("'", "&#39;");
   }
 
-  function formatObligationList(obligations: SnapshotObligation[]): string {
-    if (obligations.length === 0) {
-      return "—";
+  function formatBeforeAfterLists(
+    before: SnapshotObligation[],
+    after: SnapshotObligation[],
+  ): { beforeHtml: string; afterHtml: string } {
+    const afterMap = new Map(after.map((o) => [o.id, o]));
+
+    const beforeLines: string[] = [];
+    const afterLines: string[] = [];
+
+    for (const prev of before) {
+      const next = afterMap.get(prev.id);
+
+      beforeLines.push(
+        `${escapeHtml(prev.from)} → ${escapeHtml(prev.to)}: ${prev.amount} ${escapeHtml(prev.unit)}`
+      );
+
+      if (!next) {
+        afterLines.push(
+          `<span class="diff-removed">removed</span>`
+        );
+        continue;
+      }
+
+      if (next.amount !== prev.amount) {
+        afterLines.push(
+          `<span class="diff-reduced">${escapeHtml(next.from)} → ${escapeHtml(next.to)}: ${next.amount} ${escapeHtml(next.unit)}</span>`
+        );
+      } else {
+        afterLines.push(
+          `${escapeHtml(next.from)} → ${escapeHtml(next.to)}: ${next.amount} ${escapeHtml(next.unit)}`
+        );
+      }
     }
 
-    return obligations
-      .map(
-        (o) =>
-          `${escapeHtml(o.from)} → ${escapeHtml(o.to)}: ${o.amount} ${escapeHtml(o.unit)}`
-      )
-      .join("<br>");
+    return {
+      beforeHtml: beforeLines.join("<br>"),
+      afterHtml: afterLines.join("<br>"),
+    };
   }
 
   function diffObligations(
@@ -170,14 +197,14 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
 
       if (!next) {
         lines.push(
-          `${escapeHtml(prev.from)} → ${escapeHtml(prev.to)}: ${prev.amount} ${escapeHtml(prev.unit)} → removed`
+          `<span class="diff-removed">${escapeHtml(prev.from)} → ${escapeHtml(prev.to)}: ${prev.amount} ${escapeHtml(prev.unit)} → removed</span>`
         );
         continue;
       }
 
       if (next.amount !== prev.amount) {
         lines.push(
-          `${escapeHtml(prev.from)} → ${escapeHtml(prev.to)}: ${prev.amount} ${escapeHtml(prev.unit)} → ${next.amount} ${escapeHtml(next.unit)}`
+          `<span class="diff-reduced">${escapeHtml(prev.from)} → ${escapeHtml(prev.to)}: ${prev.amount} ${escapeHtml(prev.unit)} → ${next.amount} ${escapeHtml(next.unit)}</span>`
         );
       }
     }
@@ -207,6 +234,10 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
       const beforeGross = totalGross(state.beforeSnapshot);
       const afterGross = totalGross(state.afterSnapshot);
       const cleared = beforeGross - afterGross;
+      const { beforeHtml, afterHtml } = formatBeforeAfterLists(
+        state.beforeSnapshot,
+        state.afterSnapshot,
+      );
 
       comparisonEl.innerHTML = `
       <div class="comparison-header">
@@ -227,14 +258,14 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
         <div class="comparison-col">
           <div class="comparison-title">Before</div>
           <div class="comparison-list">
-            ${formatObligationList(state.beforeSnapshot)}
+            ${beforeHtml}
           </div>
         </div>
 
         <div class="comparison-col">
           <div class="comparison-title">After</div>
           <div class="comparison-list">
-            ${formatObligationList(state.afterSnapshot)}
+            ${afterHtml}
           </div>
         </div>
       </div>
