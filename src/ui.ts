@@ -5,6 +5,7 @@ import {
   triangleScenario,
   nestedScenario,
   liquidityScenario,
+  overlappingScenario,
 } from "./scenario";
 
 type ScenarioName = "triangle" | "nested" | "liquidity";
@@ -23,6 +24,7 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
         <button id="scenario-triangle">Triangle</button>
         <button id="scenario-nested">Nested</button>
         <button id="scenario-liquidity">Liquidity</button>
+        <button id="scenario-overlapping">Overlapping</button>
         <button id="solve-one">Resolve one cycle</button>
         <button id="solve-all">Resolve all cycles</button>
         <button id="export-json">Export JSON</button>
@@ -48,6 +50,7 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
   const triangleBtn = root.querySelector<HTMLButtonElement>("#scenario-triangle");
   const nestedBtn = root.querySelector<HTMLButtonElement>("#scenario-nested");
   const liquidityBtn = root.querySelector<HTMLButtonElement>("#scenario-liquidity");
+  const overlappingBtn = root.querySelector<HTMLButtonElement>("#scenario-overlapping");
 
   const solveOneBtn = root.querySelector<HTMLButtonElement>("#solve-one");
   const solveAllBtn = root.querySelector<HTMLButtonElement>("#solve-all");
@@ -57,20 +60,21 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
   const errorEl = root.querySelector<HTMLElement>("#error-box");
 
   if (
-  !graphEl ||
-  !metricsEl ||
-  !errorEl ||
-  !batchesEl ||
-  !triangleBtn ||
-  !nestedBtn ||
-  !liquidityBtn ||
-  !solveOneBtn ||
-  !solveAllBtn ||
-  !exportBtn ||
-  !importInput
-) {
-  throw new Error("UI mount failed: missing elements");
-}
+    !graphEl ||
+    !metricsEl ||
+    !errorEl ||
+    !batchesEl ||
+    !triangleBtn ||
+    !nestedBtn ||
+    !liquidityBtn ||
+    !overlappingBtn ||
+    !solveOneBtn ||
+    !solveAllBtn ||
+    !exportBtn ||
+    !importInput
+  ) {
+    throw new Error("UI mount failed: missing elements");
+  }
 
   const scenarioButtons: Record<ScenarioName, HTMLButtonElement> = {
     triangle: triangleBtn,
@@ -184,6 +188,11 @@ export function mountUI(root: HTMLElement, store: AppStore): void {
   liquidityBtn.addEventListener("click", () => {
     activeScenario = "liquidity";
     store.actions.setObligations(liquidityScenario());
+  });
+
+  overlappingBtn.addEventListener("click", () => {
+    activeScenario = "overlapping";
+    store.actions.setObligations(overlappingScenario());
   });
 
   solveOneBtn.addEventListener("click", () => store.actions.solveOneCycle());
